@@ -146,12 +146,18 @@ void ImageInit(void) { ///
   InstrCalibrate();
   InstrName[0] = "pixmem";  // InstrCount[0] will count pixel array acesses
   // Name other counters here...
+  InstrName[1] = "CiclosLocate";  // InstrCount[0] will count cycles in Locate
+  InstrName[2] = "CiclosBlur";  // InstrCount[0] will count cycles in blur
+  InstrName[3] = "NSomasBluB";  // InstrCount[0] will count cycles in blur
   
 }
 
 // Macros to simplify accessing instrumentation counters:
 #define PIXMEM InstrCount[0]
 // Add more macros here...
+#define CLocate InstrCount[1]
+#define CBlur InstrCount[2]
+#define NSBlur InstrCount[3]
 
 // TIP: Search for PIXMEM or InstrCount to see where it is incremented!
 
@@ -614,6 +620,7 @@ int ImageLocateSubImage(Image img1, int* px, int* py, Image img2) { /// /// ///
 
   for(x = 0; x < img1->width; x++){
     for(y = 0; y < img1->height; y++){
+      CLocate += 1;
       if(ImageValidRect(img1, x, y, img2->width, img2->height) > 0){
         result = ImageMatchSubImage(img1, x, y, img2); 
       }
@@ -643,8 +650,11 @@ void ImageBlur(Image img, int dx, int dy) { /// /// ///
       for(int i=x-dx; i<=x+dx; i++){      //rectangulo a fazer o mean filter de cada pixel
         for(int j=y-dy; j<=y+dy; j++){
           
-          if((i >= 0 && i<img->width) && (j >= 0 && j<img->height)){ //esta dentro do rec da imagem?
+          CLocate += 1;
+          
+          if((i >= 0 && i<img->width) && (j >= 0 && j<img->height)){ //esta dentro do rec da imagem1
             soma += ImageGetPixel(img, i,j);
+            NSBlur += 1;
             count++;
           }
 
