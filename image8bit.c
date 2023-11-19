@@ -650,7 +650,7 @@ void ImageBlur(Image img, int dx, int dy) { /// /// ///
       for(int i=x-dx; i<=x+dx; i++){      //rectangulo a fazer o mean filter de cada pixel
         for(int j=y-dy; j<=y+dy; j++){
           
-          CLocate += 1;
+          CBlur += 1;
           
           if((i >= 0 && i<img->width) && (j >= 0 && j<img->height)){ //esta dentro do rec da imagem1
             soma += ImageGetPixel(img, i,j);
