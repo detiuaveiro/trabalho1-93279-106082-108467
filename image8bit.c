@@ -574,20 +574,18 @@ void ImageBlend(Image img1, int x, int y, Image img2, double alpha) { ///
   assert (ImageValidRect(img1, x, y, img2->width, img2->height));
   // Insert your code here!
 
-  if (alpha == 1.0){
-      ImagePaste(img1,x,y,img2);
+  if (alpha >= 1){
+      ImagePaste(img1,x,y,img2);  
 
-      }else if(alpha > 0){
-        for(int i = x; i-x < img2->width; i++){ // passa por todos os pixeis da imagem2
-          for(int j = y; j-y < img2->height; j++){
-            double p1 = (ImageGetPixel(img1 ,i, j)*(1-alpha)); // valor para o blend
-            double p2 = (ImageGetPixel(img2,i-x, j-y)*alpha);
-            ImageSetPixel(img1 ,i, j, (uint8)(p2+p1+0.5));
-          }
-        }        
+  }else if(alpha > 0 && alpha < 1){
+    for(int i = x; i-x < img2->width; i++){ // passa por todos os pixeis da imagem2
+      for(int j = y; j-y < img2->height; j++){
+        double p1 = (ImageGetPixel(img1 ,i, j)*(1-alpha)); // valor para o blend
+        double p2 = (ImageGetPixel(img2,i-x, j-y)*alpha);
+        ImageSetPixel(img1 ,i, j, (uint8)(p2+p1+0.5));
       }
-
-  
+    }        
+  }
 }
 
 /// Compare an image to a subimage of a larger image.
@@ -640,19 +638,21 @@ int ImageLocateSubImage(Image img1, int* px, int* py, Image img2) { /// /// ///
 /// Each pixel is substituted by the mean of the pixels in the rectangle
 /// [x-dx, x+dx]x[y-dy, y+dy].
 /// The image is changed in-place.
-void ImageBlur(Image img, int dx, int dy) { /// /// ///
+void ImageBlur(Image img, int dx, int dy) { ///
   // Insert your code here!
+
+  Image i = ImageCreate(img->width, img->height, img->maxval);
 
   for(int x = 0; x < img->width; x++){
     for(int y = 0; y < img->height; y++){
 
-      int count=0, soma=0; 
+      double count=0, soma=0; 
       for(int i=x-dx; i<=x+dx; i++){      //rectangulo a fazer o mean filter de cada pixel
         for(int j=y-dy; j<=y+dy; j++){
           
           CBlur += 1;
           
-          if((i >= 0 && i<img->width) && (j >= 0 && j<img->height)){ //esta dentro do rec da imagem1
+          if((i >= 0 && i<img->width) && (j >= 0 && j<img->height)){ //esta dentro do rec da imagem original
             soma += ImageGetPixel(img, i,j);
             NSBlur += 1;
             count++;
@@ -661,9 +661,67 @@ void ImageBlur(Image img, int dx, int dy) { /// /// ///
         }
       }
 
-      ImageSetPixel(img,x,y,(uint8)(soma/count)+0.5);
+      ImageSetPixel(i,x,y,(uint8)((soma/count)+0.5));
 
     }
   }
+  
+  for(int x = 0; x < img->width; x++){        // coloca os valores na original
+    for(int y = 0; y < img->height; y++){
+      ImageSetPixel(img , x, y, ImageGetPixel(i,x,y));
+    }
+  }
 
+  ImageDestroy(&i);
 }
+
+void BetterImageBlur(Image img, int dx, int dy) { ///
+
+  int h = img->height, w = img->width;
+  uint32_t* sum = (uint32_t*)malloc(w*h*sizeof(uint32_t));
+
+  // somar o valor de todos os pixeis a esq da coodenada (x,y)
+  for (int y = 0; y < h; y++){
+    for (int x = 1; x < w; x++){
+      sum[y*w + x] = ((uint32_t) ImageGetPixel(img, x, y)) + sum[y*w + x-1];
+      NSBlur += 1;
+    }
+  }
+
+  // somar a soma de todos os pixeis ate a coordenada (x,y) desde (0,0), e guarda nessa coordenada
+  for (int x = 0; x < w; x++) {
+    for (int y = 1; y < h; y++) {
+      sum[y*w + x] += sum[(y-1)*w + x];
+      NSBlur += 1;
+    }
+  }
+
+  // fazer o blur apartir dos valores do arrays que ja tem as somas feitas
+  for (int x = 0; x < w; x++){
+    for (int y = 0; y < h; y++){
+       CBlur += 1;
+
+      // Coordenadas do rectangulo a fazer o mean
+      int x_max = (x+dx<img->width-1) ? x+dx : img->width-1;
+      int x_min = (x-dx>0) ? x-dx : 0;
+      int y_max = (y+dy<img->height-1) ? y+dy : img->height-1;
+      int y_min = (y-dy>0) ? y-dy : 0;
+
+      int count = (x_max-x_min +1)*(y_max-y_min+1); // pixeis no rectangulo
+
+      // encontra no array os valores das somas para o quadrado que queremos
+      uint32_t a = (y_min < 1 || x_min < 1 ) ? 0 : sum[(y_min -1)*w + x_min -1];
+      uint32_t b = y_min < 1 ? 0 : sum[(y_min - 1) * w + x_max];
+      uint32_t c = x_min < 1 ? 0 : sum[y_max*w + x_min-1];
+      uint32_t d = sum[y_max*w + x_max];
+
+      double soma = (double) d-b-c+a; //subtrai os quadrados fora e acrescenta a parte que sai duas vezes
+                                      //para dar a soma da area que queremos
+
+      ImageSetPixel(img , x, y, (uint8)(soma/count +0.5));
+
+    }
+  }
+  free(sum);
+}
+ 

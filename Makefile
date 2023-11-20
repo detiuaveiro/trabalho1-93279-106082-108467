@@ -70,8 +70,15 @@ test8: $(PROGS) setup
 	cmp blend.pgm test/blend.pgm
 
 test9: $(PROGS) setup
-	./imageTool tic test/original.pgm blur 7,7 save blur.pgm toc
+	./imageTool test/original.pgm blur 7,7 save blur.pgm
 	cmp blur.pgm test/blur.pgm
+
+testLocate: $(PROGS) setup
+	./imageTool tic test/original.pgm test/original.pgm locate toc
+
+testBlur: $(PROGS) setup
+	./imageTool test/original.pgm tic blur 10,10 toc save test.pgm
+	./imageTool test/original.pgm tic betterblur 10,10 toc save testbetter.pgm
 
 .PHONY: tests
 tests: $(TESTS)
