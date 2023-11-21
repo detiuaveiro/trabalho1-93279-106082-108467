@@ -597,9 +597,14 @@ int ImageMatchSubImage(Image img1, int x, int y, Image img2) { /// /// ///
   assert (ImageValidPos(img1, x, y));
   // Insert your code here!
 
-  for(int i = x; i-x < img2->width; i++){
-    for(int j = y; j-y < img2->height; j++){
-      if(ImageGetPixel(img1, i, j) != ImageGetPixel(img2, i-x, j-y)) return 0;
+  for(int i = 0; i < img2->width; i++){
+    for(int j = 0; j < img2->height; j++){
+      CLocate += 1;
+      int p1 = ImageGetPixel(img1, i+x, j+y);
+      int p2 = ImageGetPixel(img2, i, j);
+      if(p1 != p2){
+       return 0;
+      }
     }   
   }
   return 1;
@@ -614,22 +619,19 @@ int ImageLocateSubImage(Image img1, int* px, int* py, Image img2) { /// /// ///
   assert (img2 != NULL);
   // Insert your code here!
 
-  int result = 0, x, y;
-
-  for(x = 0; x < img1->width; x++){
-    for(y = 0; y < img1->height; y++){
-      CLocate += 1;
-      if(ImageValidRect(img1, x, y, img2->width, img2->height) > 0){
-        result = ImageMatchSubImage(img1, x, y, img2); 
+  for(int x = 0; x < img1->width; x++){
+    for(int y = 0; y < img1->height; y++){
+      if(ImageValidRect(img1, x, y, img2->width, img2->height)){
+        if(ImageMatchSubImage(img1, x, y, img2)){
+          *px = x;
+          *py = y;
+          return 1;
+        }
       }
     }   
   }
-
-  if(result == 1){
-    *px = x;
-    *py = y;
-  }
-  return result;
+  
+  return 0;
 }
 
 
@@ -702,26 +704,24 @@ void BetterImageBlur(Image img, int dx, int dy) { ///
        CBlur += 1;
 
       // Coordenadas do rectangulo a fazer o mean
-      int x_max = (x+dx<img->width-1) ? x+dx : img->width-1;
-      int x_min = (x-dx>0) ? x-dx : 0;
-      int y_max = (y+dy<img->height-1) ? y+dy : img->height-1;
-      int y_min = (y-dy>0) ? y-dy : 0;
-
-      int count = (x_max-x_min +1)*(y_max-y_min+1); // pixeis no rectangulo
+      int xM = (x+dx<img->width-1) ? x+dx : img->width-1;
+      int xm = (x-dx>0) ? x-dx : 0;
+      int yM = (y+dy<img->height-1) ? y+dy : img->height-1;
+      int ym = (y-dy>0) ? y-dy : 0;
+      int count = (xM-xm +1)*(yM-ym+1); // pixeis no rectangulo
 
       // encontra no array os valores das somas para o quadrado que queremos
-      uint32_t a = (y_min < 1 || x_min < 1 ) ? 0 : sum[(y_min -1)*w + x_min -1];
-      uint32_t b = y_min < 1 ? 0 : sum[(y_min - 1) * w + x_max];
-      uint32_t c = x_min < 1 ? 0 : sum[y_max*w + x_min-1];
-      uint32_t d = sum[y_max*w + x_max];
-
+      uint32_t a = (ym < 1 || xm < 1 ) ? 0 : sum[(ym -1)*w + xm -1];
+      uint32_t b = ym < 1 ? 0 : sum[(ym - 1) * w + xM];
+      uint32_t c = xm < 1 ? 0 : sum[yM*w + xm-1];
+      uint32_t d = sum[yM*w + xM];
       double soma = (double) d-b-c+a; //subtrai os quadrados fora e acrescenta a parte que sai duas vezes
                                       //para dar a soma da area que queremos
-
       ImageSetPixel(img , x, y, (uint8)(soma/count +0.5));
 
     }
   }
+
   free(sum);
 }
  
