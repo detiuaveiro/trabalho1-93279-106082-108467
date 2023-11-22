@@ -680,48 +680,49 @@ void ImageBlur(Image img, int dx, int dy) { ///
 void BetterImageBlur(Image img, int dx, int dy) { ///
 
   int h = img->height, w = img->width;
-  uint32_t* sum = (uint32_t*)malloc(w*h*sizeof(uint32_t));
+  
+  int32_t sum[h][w];
 
-  // somar o valor de todos os pixeis a esq da coodenada (x,y)
-  for (int y = 0; y < h; y++){
-    for (int x = 1; x < w; x++){
-      sum[y*w + x] = ((uint32_t) ImageGetPixel(img, x, y)) + sum[y*w + x-1];
-      NSBlur += 1;
+  // Somar o valor de toods os pixeis que ficam em posiçoes atmás (x,y) na posiçao (x,y)
+  for (int x = 0; x < w; x++){
+    for (int y = 0; y < h; y++){
+      if(x == 0 && y == 0 ){
+        sum[y][x] = (uint32_t)ImageGetPixel(img,x,y); // sum[0][0] == valor do primeiro pixel img
+      }else if(x == 0){
+        sum[y][x] = (uint32_t)(ImageGetPixel(img,x,y) + sum[y-1][x]);
+        NSBlur += 1;
+      }else if(y == 0){        
+        sum[y][x] = (uint32_t)(ImageGetPixel(img,x,y) + sum[y][x-1]);
+        NSBlur += 1;
+      }else{
+        sum[y][x] = (uint32_t)(ImageGetPixel(img,x,y) + sum[y][x-1] + sum[y-1][x] - sum[y-1][x-1]);
+        NSBlur += 2;
+      }
     }
   }
 
-  // somar a soma de todos os pixeis ate a coordenada (x,y) desde (0,0), e guarda nessa coordenada
-  for (int x = 0; x < w; x++) {
-    for (int y = 1; y < h; y++) {
-      sum[y*w + x] += sum[(y-1)*w + x];
-      NSBlur += 1;
-    }
-  }
-
-  // fazer o blur apartir dos valores do arrays que ja tem as somas feitas
   for (int x = 0; x < w; x++){
     for (int y = 0; y < h; y++){
        CBlur += 1;
 
       // Coordenadas do rectangulo a fazer o mean
-      int xM = (x+dx<img->width-1) ? x+dx : img->width-1;
+      int xM = (x+dx<w-1) ? x+dx : w-1;
       int xm = (x-dx>0) ? x-dx : 0;
-      int yM = (y+dy<img->height-1) ? y+dy : img->height-1;
+      int yM = (y+dy<h-1) ? y+dy : h-1;
       int ym = (y-dy>0) ? y-dy : 0;
       int count = (xM-xm +1)*(yM-ym+1); // pixeis no rectangulo
 
+
       // encontra no array os valores das somas para o quadrado que queremos
-      uint32_t a = (ym < 1 || xm < 1 ) ? 0 : sum[(ym -1)*w + xm -1];
-      uint32_t b = ym < 1 ? 0 : sum[(ym - 1) * w + xM];
-      uint32_t c = xm < 1 ? 0 : sum[yM*w + xm-1];
-      uint32_t d = sum[yM*w + xM];
+      uint32_t a = (ym < 1 || xm < 1 ) ? 0 : sum[ym -1][xm -1];
+      uint32_t b = ym < 1 ? 0 : sum[ym - 1][xM];
+      uint32_t c = xm < 1 ? 0 : sum[yM][xm-1];
+      uint32_t d = sum[yM][xM];
+
       double soma = (double) d-b-c+a; //subtrai os quadrados fora e acrescenta a parte que sai duas vezes
                                       //para dar a soma da area que queremos
       ImageSetPixel(img , x, y, (uint8)(soma/count +0.5));
-
     }
   }
-
-  free(sum);
 }
  

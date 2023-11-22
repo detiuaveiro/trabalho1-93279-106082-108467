@@ -79,8 +79,8 @@ testLocate: $(PROGS) setup
 	./imageTool locatecrop.pgm test/original.pgm tic locate toc
 
 testBlur: $(PROGS) setup
-	./imageTool test/original.pgm tic blur 10,10 toc save test.pgm
-	./imageTool test/original.pgm tic betterblur 10,10 toc save testbetter.pgm
+	./imageTool pgm/large/airfield-05_1600x1200.pgm tic blur 10,10 toc save test.pgm
+	./imageTool pgm/large/airfield-05_1600x1200.pgm tic betterblur 10,10 toc save testbetter.pgm
 	cmp testbetter.pgm test.pgm
 
 .PHONY: tests
