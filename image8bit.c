@@ -619,14 +619,12 @@ int ImageLocateSubImage(Image img1, int* px, int* py, Image img2) { /// /// ///
   assert (img2 != NULL);
   // Insert your code here!
 
-  for(int x = 0; x < img1->width; x++){
-    for(int y = 0; y < img1->height; y++){
-      if(ImageValidRect(img1, x, y, img2->width, img2->height)){
-        if(ImageMatchSubImage(img1, x, y, img2)){
-          *px = x;
-          *py = y;
-          return 1;
-        }
+  for(int x = 0; x < img1->width-img2->width+1; x++){
+    for(int y = 0; y < img1->height-img2->height+1; y++){
+      if(ImageMatchSubImage(img1, x, y, img2)){
+        *px = x;
+        *py = y;
+        return 1;
       }
     }   
   }
@@ -654,7 +652,7 @@ void ImageBlur(Image img, int dx, int dy) { ///
           
           CBlur += 1;
           
-          if((i >= 0 && i<img->width) && (j >= 0 && j<img->height)){ //esta dentro do rec da imagem original
+          if(ImageValidPos(img, i, j)){ //esta dentro do rec da imagem original
             soma += ImageGetPixel(img, i,j);
             NSBlur += 1;
             count++;
@@ -670,17 +668,16 @@ void ImageBlur(Image img, int dx, int dy) { ///
   
   for(int x = 0; x < img->width; x++){        // coloca os valores na original
     for(int y = 0; y < img->height; y++){
+      CBlur += 1;
       ImageSetPixel(img , x, y, ImageGetPixel(i,x,y));
     }
   }
-
   ImageDestroy(&i);
 }
 
 void BetterImageBlur(Image img, int dx, int dy) { ///
 
   int h = img->height, w = img->width;
-  
   int32_t sum[h][w];
 
   // Somar o valor de toods os pixeis que ficam em posiçoes atmás (x,y) na posiçao (x,y)
