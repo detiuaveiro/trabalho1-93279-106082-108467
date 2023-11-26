@@ -76,7 +76,7 @@ test9: $(PROGS) setup
 testLocate: $(PROGS) setup
 	# creates a crop in the best case (x = 0, y = 0)
 	./imageTool test/original.pgm crop 0,0,100,100 save Locate/bestcrop.pgm
-	# # creates a crop in the worst case ( x = with origina - with crop , x = with origina - with crop )
+	# # creates a crop in the worst case ( x = with origina - with crop , y = heigt origina - heigt crop )
 	./imageTool test/original.pgm crop 200,200,100,100 save Locate/worstcrop.pgm
 	# Test
 	./imageTool Locate/bestcrop.pgm test/original.pgm tic locate toc
@@ -84,16 +84,16 @@ testLocate: $(PROGS) setup
 
 testBlur: $(PROGS) setup
 	# Mean 3x3
-	./imageTool pgm/large/airfield-05_1600x1200.pgm tic blur 1,1 toc
-	./imageTool pgm/large/airfield-05_1600x1200.pgm tic betterblur 1,1 toc
-	cmp Blur/test_11x11.pgm Blur/testbetter_11x11.pgm
+	./imageTool pgm/small/bird_256x256.pgm tic blur 1,1 toc save Blur/test_3x3.pgm
+	./imageTool pgm/small/bird_256x256.pgm tic betterblur 1,1 toc save Blur/testbetter_3x3.pgm
+	cmp Blur/test_3x3.pgm Blur/testbetter_3x3.pgm
 	# Mean 11x11
-	./imageTool pgm/large/airfield-05_1600x1200.pgm tic blur 5,5 toc save Blur/test_11x11.pgm
-	./imageTool pgm/large/airfield-05_1600x1200.pgm tic betterblur 5,5 toc save Blur/testbetter_11x11.pgm
+	./imageTool pgm/small/bird_256x256.pgm tic blur 5,5 toc save Blur/test_11x11.pgm
+	./imageTool pgm/small/bird_256x256.pgm tic betterblur 5,5 toc save Blur/testbetter_11x11.pgm
 	cmp Blur/test_11x11.pgm Blur/testbetter_11x11.pgm
 	# Mean 21x21
-	./imageTool pgm/large/airfield-05_1600x1200.pgm tic blur 10,10 toc save Blur/test_21x21.pgm
-	./imageTool pgm/large/airfield-05_1600x1200.pgm tic betterblur 10,10 toc save Blur/testbetter_21x21.pgm
+	./imageTool pgm/small/bird_256x256.pgm tic blur 10,10 toc save Blur/test_21x21.pgm
+	./imageTool pgm/small/bird_256x256.pgm tic betterblur 10,10 toc save Blur/testbetter_21x21.pgm
 	cmp Blur/test_21x21.pgm Blur/testbetter_21x21.pgm
 
 .PHONY: tests
