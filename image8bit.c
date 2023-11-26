@@ -11,9 +11,10 @@
 
 // Student authors (fill in below):
 // NMec: 93279 Name: Antonio Moreira
-// 
-// 
-// Date:
+// NMEC: 108467 Name: Marta Almeida
+// NMEC: 106082 Name: Mateus da Fonte
+//
+// Date: 25/11/2023
 //
 
 #include "image8bit.h"
